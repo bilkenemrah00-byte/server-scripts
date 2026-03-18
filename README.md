@@ -1,13 +1,30 @@
 # server-scripts
 
-Dokploy uzerinde calisan servisler icin kaynak kodlar.
+Dokploy üzerinde çalışan servisler için kaynak kodlar.
 
-## Servisler (Planlanan)
-- futbol-collector/ — Mac verisi ve odds toplama
-- futbol-engine/ — Poisson modeli, form analizi, sinyal uretimi
-- kripto-collector/ — OHLCV, funding rate toplama
-- kripto-engine/ — Korelasyon, hedge sinyal uretimi
-- shared/ — Ortak DB utils
+## Dizin Yapısı
+
+```
+server-scripts/
+├── shared/              # Ortak utilities — DB bağlantısı, logging, config
+│
+├── futbol/
+│   ├── collector/       # Veri toplama — API, odds, istatistik
+│   ├── engine/          # Poisson, ELO, form analizi, sinyal üretimi
+│   └── dashboard/       # Raporlama çıktıları (opsiyonel)
+│
+├── kripto/
+│   ├── collector/       # OHLCV, funding rate, haber toplama
+│   └── engine/          # Korelasyon, hedge, sinyal üretimi
+│
+└── infra/               # Dokploy compose dosyaları, migration scriptleri
+```
 
 ## Deployment
-Her servis Dokploy'a ayri compose servisi olarak deploy edilir.
+
+Her servis Dokploy'a ayrı compose servisi olarak deploy edilir.
+
+## Notlar
+
+- `shared/` — Tüm servislerin ortak kullandığı utility fonksiyonları
+- `infra/` — Altyapı konfigürasyonları ve migration scriptleri
