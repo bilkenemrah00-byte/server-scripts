@@ -60,15 +60,65 @@ MAX_WORKERS = int(os.getenv("MAX_WORKERS", "8"))
 PAST_FIXTURES_WINDOW = int(os.getenv("PAST_FIXTURES_WINDOW", "20"))
 PRIORITY_LEAGUES = {
     39,   # Premier League
-    140,  # La Liga
-    135,  # Serie A
-    78,   # Bundesliga
+    40,   # Championship
+    41,   # League One
+    42,   # League Two
     61,   # Ligue 1
-    203,  # Süper Lig
-    2,    # Champions League
-    3,    # Europa League
+    62,   # Ligue 2
+    78,   # Bundesliga
+    79,   # 2. Bundesliga
+    80,   # 3. Liga
     88,   # Eredivisie
+    89,   # Eerste Divisie
     94,   # Primeira Liga
+    95,   # Segunda Liga
+    106,  # Ekstraklasa
+    119,  # Superliga (Denmark)
+    128,  # Liga Profesional Argentina
+    135,  # Serie A
+    136,  # Serie B
+    140,  # La Liga
+    141,  # Segunda División
+    144,  # Jupiler Pro League
+    145,  # Challenger Pro League
+    179,  # Scottish Premiership
+    197,  # Super League 1 (Greece)
+    203,  # Süper Lig
+    204,  # 1. Lig (Turkey)
+    207,  # Super League (Switzerland)
+    210,  # HNL (Croatia)
+    218,  # Bundesliga (Austria)
+    219,  # 2. Liga (Austria)
+    233,  # Premier League (Egypt)
+    235,  # Premier League (Russia)
+    239,  # Primera A (Colombia)
+    242,  # Liga Pro (Ecuador)
+    253,  # MLS
+    262,  # Liga MX
+    265,  # Primera División (Chile)
+    271,  # NB I (Hungary)
+    281,  # Primera División (Peru)
+    283,  # Liga I (Romania)
+    286,  # Super Liga (Serbia)
+    288,  # Premier Soccer League
+    296,  # Thai League 1
+    301,  # Pro League (UAE)
+    305,  # Stars League (Qatar)
+    307,  # Pro League (Saudi Arabia)
+    318,  # 1. Division (Cyprus)
+    323,  # Indian Super League
+    332,  # Super Liga (Slovakia)
+    333,  # Premier League (Ukraine)
+    345,  # Czech Liga
+    357,  # Premier Division (Ireland)
+    383,  # Ligat Ha'al (Israel)
+    2,    # UEFA Champions League
+    3,    # UEFA Europa League
+    17,   # AFC Champions League
+    46,   # EFL Trophy
+    71,   # Serie A (Brazil)
+    98,   # J1 League
+    848,  # UEFA Europa Conference League
 }
 
 
@@ -279,6 +329,9 @@ def collect_all_fixtures_parallel(
     Uses MAX_WORKERS threads to parallelize API calls per fixture.
     Rate limiting is enforced inside each API call.
     """
+    # Filter to priority leagues only
+    fixtures = [f for f in fixtures if f['league']['id'] in PRIORITY_LEAGUES]
+    logger.info(f"Filtered to {len(fixtures)} priority league fixtures")
     logger.info(f"Stage 4: Collecting data for {len(fixtures)} fixtures ({MAX_WORKERS} workers)")
 
     results = []
