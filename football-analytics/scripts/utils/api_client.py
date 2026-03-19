@@ -17,7 +17,7 @@ import httpx
 from typing import Any, Optional
 from pathlib import Path
 
-from .rate_limiter import SyncRateLimiter
+from .rate_limiter import SyncRateLimiter, get_global_limiter
 
 logger = logging.getLogger(__name__)
 
@@ -71,7 +71,7 @@ class APIFootballClient:
         rate_limiter: Optional[SyncRateLimiter] = None,
     ):
         self._api_key = api_key or load_api_key()
-        self._rate_limiter = rate_limiter or SyncRateLimiter()
+        self._rate_limiter = rate_limiter or get_global_limiter()
         self._client = httpx.Client(
             base_url=BASE_URL,
             headers={"x-apisports-key": self._api_key},
