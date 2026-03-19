@@ -42,7 +42,7 @@ _global_limiter = None
 def get_global_limiter() -> SyncRateLimiter:
     global _global_limiter
     if _global_limiter is None:
-        _global_limiter = SyncRateLimiter(max_per_minute=60)  # Güvenli limit
+        _global_limiter = SyncRateLimiter(max_per_minute=40)  # Güvenli limit
     return _global_limiter
 
 # Eski isimler için alias
