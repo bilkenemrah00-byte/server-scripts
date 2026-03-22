@@ -158,6 +158,38 @@ def evaluate_predictions(fix: dict, result: dict) -> dict:
         if corner_predicted is not None:
             corner_correct = (corners > 10) == corner_predicted
 
+    # İlk yarı gol tahmini
+    ht_home = result.get('halftime_home', 0) or 0
+    ht_away = result.get('halftime_away', 0) or 0
+    ht_goals = (ht_home if isinstance(ht_home, int) else 0) + (ht_away if isinstance(ht_away, int) else 0)
+    ht_predicted = None
+    ht_correct = None
+    u6_analysis = analysis.get('u06_first_half_goal', {})
+    if u6_analysis:
+        conc = u6_analysis.get('conclusion', '')
+        conf = u6_analysis.get('confidence', '')
+        if 'YÜKSEK' in conc and conf == 'HIGH':
+            ht_predicted = True
+        elif 'golsüz' in conc.lower():
+            ht_predicted = False
+        if ht_predicted is not None:
+            ht_correct = (ht_goals > 0) == ht_predicted
+
+    # İkinci yarı gol tahmini
+    sh_goals = total - ht_goals
+    sh_predicted = None
+    sh_correct = None
+    u7_analysis = analysis.get('u07_second_half_goal', {})
+    if u7_analysis:
+        conc = u7_analysis.get('conclusion', '')
+        conf = u7_analysis.get('confidence', '')
+        if 'YOĞUN' in conc or ('YÜKSEK' in conc and conf == 'HIGH'):
+            sh_predicted = True
+        elif 'hareketli olmayabilir' in conc.lower():
+            sh_predicted = False
+        if sh_predicted is not None:
+            sh_correct = (sh_goals > 0) == sh_predicted
+
     return {
         'actual_outcome': actual_outcome,
         'our_pick': our_pick,
@@ -173,6 +205,12 @@ def evaluate_predictions(fix: dict, result: dict) -> dict:
         'corners_actual': corners,
         'corner_high_predicted': corner_predicted,
         'corner_correct': corner_correct,
+        'ht_goals': ht_goals,
+        'ht_predicted': ht_predicted,
+        'ht_correct': ht_correct,
+        'sh_goals': sh_goals,
+        'sh_predicted': sh_predicted,
+        'sh_correct': sh_correct,
     }
 
 
@@ -190,10 +228,17 @@ def generate_results_html(analysis: dict, enriched_fixtures: list) -> str:
     btts_total = sum(1 for f in ft_fixtures if f.get('eval', {}).get('btts_predicted') is not None)
     btts_correct = sum(1 for f in ft_fixtures if f.get('eval', {}).get('btts_correct'))
 
+    ht_total = sum(1 for f in ft_fixtures if f.get('eval', {}).get('ht_predicted') is not None)
+    ht_correct_n = sum(1 for f in ft_fixtures if f.get('eval', {}).get('ht_correct'))
+    sh_total = sum(1 for f in ft_fixtures if f.get('eval', {}).get('sh_predicted') is not None)
+    sh_correct_n = sum(1 for f in ft_fixtures if f.get('eval', {}).get('sh_correct'))
+
     acc_our = f"{correct_pred/total_pred:.0%}" if total_pred else "—"
     acc_mkt = f"{correct_mkt/total_mkt:.0%}" if total_mkt else "—"
     acc_over = f"{over_correct/over_total:.0%}" if over_total else "—"
     acc_btts = f"{btts_correct/btts_total:.0%}" if btts_total else "—"
+    acc_ht = f"{ht_correct_n/ht_total:.0%}" if ht_total else "—"
+    acc_sh = f"{sh_correct_n/sh_total:.0%}" if sh_total else "—"
 
     # FT fixture kartları
     ft_cards = ""
@@ -229,6 +274,18 @@ def generate_results_html(analysis: dict, enriched_fixtures: list) -> str:
         btts_badge = ""
         if ev.get('btts_predicted') is not None:
             btts_badge = f'<span class="badge-{"ok" if ev.get("btts_correct") else "fail"}">BTTS: {"✓" if ev.get("btts_actual") else "✗"} (pred:{"Yes" if ev.get("btts_predicted") else "No"})</span>'
+        ht_badge = ""
+        if ev.get('ht_predicted') is not None:
+            ht_ok = ev.get('ht_correct', False)
+            ht_actual = ev.get('ht_goals', 0) > 0
+            ht_pred_str = "Yes" if ev.get('ht_predicted') else "No"
+            ht_badge = f'<span class="badge-{"ok" if ht_ok else "fail"}">HT Gol: {"\u2713" if ht_actual else "\u2717"} (pred:{ht_pred_str})</span>'
+        sh_badge = ""
+        if ev.get('sh_predicted') is not None:
+            sh_ok = ev.get('sh_correct', False)
+            sh_actual = ev.get('sh_goals', 0) > 0
+            sh_pred_str = "Yes" if ev.get('sh_predicted') else "No"
+            sh_badge = f'<span class="badge-{"ok" if sh_ok else "fail"}">2Y Gol: {"\u2713" if sh_actual else "\u2717"} (pred:{sh_pred_str})</span>'
 
         # Gol olayları
         goal_timeline = ""
@@ -273,7 +330,7 @@ def generate_results_html(analysis: dict, enriched_fixtures: list) -> str:
     </div>
   </div>
   <div class="rc-body">
-    <div class="rc-badges">{our_badge}{mkt_badge}{over_badge}{btts_badge}</div>
+    <div class="rc-badges">{our_badge}{mkt_badge}{over_badge}{btts_badge}{ht_badge}{sh_badge}</div>
     <div class="rc-goals">{goal_timeline if goal_timeline else '<span style="color:#666">Gol bilgisi yok</span>'}</div>
     {stats_html}
     <div class="rc-probs">
@@ -407,6 +464,16 @@ def generate_results_html(analysis: dict, enriched_fixtures: list) -> str:
       <div class="acc-label">BTTS</div>
       <div class="acc-value">{acc_btts}</div>
       <div class="acc-detail">{btts_correct}/{btts_total} doğru</div>
+    </div>
+    <div class="acc-card">
+      <div class="acc-label">İlk Yarı Gol</div>
+      <div class="acc-value">{acc_ht}</div>
+      <div class="acc-detail">{ht_correct_n}/{ht_total} doğru</div>
+    </div>
+    <div class="acc-card">
+      <div class="acc-label">2. Yarı Gol</div>
+      <div class="acc-value">{acc_sh}</div>
+      <div class="acc-detail">{sh_correct_n}/{sh_total} doğru</div>
     </div>
   </div>
 </div>
