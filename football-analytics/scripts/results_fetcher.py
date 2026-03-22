@@ -119,7 +119,7 @@ def evaluate_predictions(fix: dict, result: dict) -> dict:
     # Over/Under tahmin kontrolü
     over_predicted = None
     over_correct = None
-    u2_analysis = analysis.get('u02_over_under', {})
+    u2_analysis = analysis.get('U2_over_2_5', {})
     if u2_analysis:
         conf = u2_analysis.get('confidence', '')
         conc = u2_analysis.get('conclusion', '')
@@ -133,7 +133,7 @@ def evaluate_predictions(fix: dict, result: dict) -> dict:
     # BTTS kontrolü
     btts_predicted = None
     btts_correct = None
-    u3_analysis = analysis.get('u03_btts', {})
+    u3_analysis = analysis.get('U3_btts', {})
     if u3_analysis:
         conc = u3_analysis.get('conclusion', '')
         conf = u3_analysis.get('confidence', '')
@@ -148,7 +148,7 @@ def evaluate_predictions(fix: dict, result: dict) -> dict:
     # Korner tahmini
     corner_predicted = None
     corner_correct = None
-    u9_analysis = analysis.get('u09_corners', {})
+    u9_analysis = analysis.get('U9_korner', {})
     if u9_analysis:
         conc = u9_analysis.get('conclusion', '')
         if 'YÜKSEK' in conc:
@@ -164,7 +164,7 @@ def evaluate_predictions(fix: dict, result: dict) -> dict:
     ht_goals = (ht_home if isinstance(ht_home, int) else 0) + (ht_away if isinstance(ht_away, int) else 0)
     ht_predicted = None
     ht_correct = None
-    u6_analysis = analysis.get('u06_first_half_goal', {})
+    u6_analysis = analysis.get('U6_ilk_yari_gol', {})
     if u6_analysis:
         conc = u6_analysis.get('conclusion', '')
         conf = u6_analysis.get('confidence', '')
@@ -179,7 +179,7 @@ def evaluate_predictions(fix: dict, result: dict) -> dict:
     sh_goals = total - ht_goals
     sh_predicted = None
     sh_correct = None
-    u7_analysis = analysis.get('u07_second_half_goal', {})
+    u7_analysis = analysis.get('U7_ikinci_yari_gol', {})
     if u7_analysis:
         conc = u7_analysis.get('conclusion', '')
         conf = u7_analysis.get('confidence', '')
