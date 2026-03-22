@@ -279,13 +279,15 @@ def generate_results_html(analysis: dict, enriched_fixtures: list) -> str:
             ht_ok = ev.get('ht_correct', False)
             ht_actual = ev.get('ht_goals', 0) > 0
             ht_pred_str = "Yes" if ev.get('ht_predicted') else "No"
-            ht_badge = f'<span class="badge-{"ok" if ht_ok else "fail"}">HT Gol: {"\u2713" if ht_actual else "\u2717"} (pred:{ht_pred_str})</span>'
+            ht_icon = "✓" if ht_actual else "✗"
+            ht_badge = f'<span class="badge-{"ok" if ht_ok else "fail"}">HT Gol: {ht_icon} (pred:{ht_pred_str})</span>'
         sh_badge = ""
         if ev.get('sh_predicted') is not None:
             sh_ok = ev.get('sh_correct', False)
             sh_actual = ev.get('sh_goals', 0) > 0
             sh_pred_str = "Yes" if ev.get('sh_predicted') else "No"
-            sh_badge = f'<span class="badge-{"ok" if sh_ok else "fail"}">2Y Gol: {"\u2713" if sh_actual else "\u2717"} (pred:{sh_pred_str})</span>'
+            sh_icon = "✓" if sh_actual else "✗"
+            sh_badge = f'<span class="badge-{"ok" if sh_ok else "fail"}">2Y Gol: {sh_icon} (pred:{sh_pred_str})</span>'
 
         # Gol olayları
         goal_timeline = ""
