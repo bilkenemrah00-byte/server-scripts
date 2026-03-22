@@ -354,6 +354,22 @@ def engineer_features(fixture_data: dict) -> dict:
 
     features = {}
 
+    # --- A0. Home/Away split features (kritik) ---
+    home_home_matches = [m for m in home_past if m.get('is_home', True)]
+    home_away_matches = [m for m in home_past if not m.get('is_home', True)]
+    away_home_matches = [m for m in away_past if m.get('is_home', True)]
+    away_away_matches = [m for m in away_past if not m.get('is_home', True)]
+
+    # Home takımının evdeki performansı (bu maçta ev sahibi)
+    features["home_win_rate_at_home"] = calculate_win_rate(home_home_matches, min(5, len(home_home_matches)) or 1)
+    features["home_goals_for_at_home"] = calculate_goals_avg(home_home_matches, "for", min(5, len(home_home_matches)) or 1)
+    features["home_goals_against_at_home"] = calculate_goals_avg(home_home_matches, "against", min(5, len(home_home_matches)) or 1)
+
+    # Away takımının deplasman performansı (bu maçta deplasman)
+    features["away_win_rate_away"] = calculate_win_rate(away_away_matches, min(5, len(away_away_matches)) or 1)
+    features["away_goals_for_away"] = calculate_goals_avg(away_away_matches, "for", min(5, len(away_away_matches)) or 1)
+    features["away_goals_against_away"] = calculate_goals_avg(away_away_matches, "against", min(5, len(away_away_matches)) or 1)
+
     # --- A. Form features (multiple windows) ---
     for side, matches in [("home", home_past), ("away", away_past)]:
         for w in WINDOWS:

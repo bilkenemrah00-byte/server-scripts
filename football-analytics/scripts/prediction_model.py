@@ -22,15 +22,18 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 WEIGHTS_V1 = {
-    "win_rate_last_5":        0.25,
-    "win_rate_last_10":       0.15,
-    "form_momentum":          0.15,
+    "win_rate_last_5":        0.22,
+    "win_rate_last_10":       0.13,
+    "form_momentum":          0.12,
     "attack_defense_matchup": 0.10,
-    "h2h_advantage":          0.10,
+    "h2h_advantage":          0.06,   # düşürüldü — H2H az maç, gürültülü
     "rank_advantage":         0.10,
     "goals_avg_matchup":      0.10,
     "points_advantage":       0.05,
+    "home_advantage":         0.12,   # YENİ — ev sahibi doğal avantajı
 }
+
+HOME_ADVANTAGE_BONUS = 0.12   # Home team'e sabit bonus puan
 
 VALUE_BET_THRESHOLD = 0.10   # 10% edge = value bet
 MODEL_VERSION = "weighted_v1"
@@ -97,11 +100,19 @@ def _calculate_team_score(features: dict, side: str) -> float:
     opp = "away" if side == "home" else "home"
     score = 0.0
 
-    # Win rate last 5
+    # Win rate last 5 — genel
     score += features.get(f"{side}_win_rate_last_5", 0.33) * WEIGHTS_V1["win_rate_last_5"]
 
-    # Win rate last 10
+    # Win rate last 10 — genel
     score += features.get(f"{side}_win_rate_last_10", 0.33) * WEIGHTS_V1["win_rate_last_10"]
+
+    # Home/Away split win rate (kritik — venue-specific performans)
+    if side == "home":
+        venue_wr = features.get("home_win_rate_at_home", features.get("home_win_rate_last_5", 0.33))
+        score += venue_wr * 0.15  # evdeki gerçek performans
+    else:
+        venue_wr = features.get("away_win_rate_away", features.get("away_win_rate_last_5", 0.33))
+        score += venue_wr * 0.15  # deplasmanındaki gerçek performans
 
     # Form momentum (bonus if improving)
     momentum = features.get(f"{side}_form_momentum", 0.0)
@@ -144,6 +155,10 @@ def _calculate_team_score(features: dict, side: str) -> float:
     else:
         pts_adv = max(0.0, away_pts - home_pts) / 50.0
     score += pts_adv * WEIGHTS_V1["points_advantage"]
+
+    # Home advantage bonus — ev sahibi doğal avantajı
+    if side == "home":
+        score += HOME_ADVANTAGE_BONUS * WEIGHTS_V1["home_advantage"]
 
     return max(0.01, score)
 
