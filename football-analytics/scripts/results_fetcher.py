@@ -492,6 +492,78 @@ def generate_results_html(analysis: dict, enriched_fixtures: list) -> str:
 </html>"""
 
 
+def update_archive(output_dir: Path):
+    """results_archive.html — tarih seçici sayfa"""
+    results_files = sorted(output_dir.glob('results_*_istanbul.html'), reverse=True)
+    options = []
+    for f in results_files:
+        json_f = output_dir / f.name.replace('.html', '.json')
+        ft_count = total = 0
+        acc_our = acc_mkt = '—'
+        parts = f.stem.replace('results_', '').replace('_istanbul', '').split('_')
+        if len(parts) == 2:
+            d, t = parts
+            date_label = f"{d[:4]}-{d[4:6]}-{d[6:8]} {t[:2]}:{t[2:]}"
+        else:
+            date_label = f.name
+
+        if json_f.exists():
+            data = json.loads(json_f.read_text())
+            fixtures = data.get('fixtures', [])
+            total = len(fixtures)
+            ft_fixtures = [x for x in fixtures if x.get('result', {}).get('status') == 'FT']
+            ft_count = len(ft_fixtures)
+            correct_our = sum(1 for x in ft_fixtures if x.get('eval', {}).get('our_correct'))
+            correct_mkt = sum(1 for x in ft_fixtures if x.get('eval', {}).get('mkt_correct'))
+            tp = sum(1 for x in ft_fixtures if x.get('eval', {}).get('our_pick'))
+            if tp:
+                acc_our = f"{correct_our/tp:.0%}"
+                acc_mkt = f"{correct_mkt/tp:.0%}"
+
+        label = f"{date_label} — {ft_count}/{total} FT | Bizim: {acc_our} Market: {acc_mkt}"
+        options.append((f.name, label))
+
+    if not options:
+        return
+
+    options_html = '\n'.join(f'<option value="{n}">{l}</option>' for n, l in options)
+    html = f"""<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Football Results Archive</title>
+<style>
+  * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+  body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f1117; color: #e0e0e0; }}
+  .selector-bar {{ background: #1a1d2e; border-bottom: 1px solid #2a2d3e; padding: 12px 16px;
+    display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 100; }}
+  .selector-bar h1 {{ font-size: 1rem; color: #fff; white-space: nowrap; }}
+  select {{ flex: 1; background: #252840; border: 1px solid #3a3d5c; color: #e0e0e0;
+    padding: 8px 12px; border-radius: 8px; font-size: 0.88rem; cursor: pointer; }}
+  select:focus {{ outline: none; border-color: #7c8cf8; }}
+  iframe {{ width: 100%; height: calc(100vh - 53px); border: none; display: block; }}
+</style>
+</head>
+<body>
+<div class="selector-bar">
+  <h1>📊 Results Archive</h1>
+  <select id="file-select" onchange="loadFile()">
+    {options_html}
+  </select>
+</div>
+<iframe id="content-frame" src="{options[0][0]}"></iframe>
+<script>
+function loadFile() {{
+  document.getElementById('content-frame').src = document.getElementById('file-select').value;
+}}
+</script>
+</body>
+</html>"""
+
+    (output_dir / 'results_archive.html').write_text(html, encoding='utf-8')
+    logger.info("results_archive.html updated")
+
 def main():
     output_dir = Path(OUTPUT_DIR)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -540,7 +612,9 @@ def main():
     results_index = output_dir / 'results_index.html'
     results_index.write_text(html, encoding='utf-8')
     logger.info(f"results_index.html updated")
+    update_archive(output_dir)
 
 
 if __name__ == '__main__':
     main()
+
